@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Meal total · MealPLANO{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <h1>Meal plan total</h1>
+    <form method="get">
+      {% set ns = namespace(any=false) %}
+      {% for category, foods in menus.items() if foods %}
+        {% set ns.any = true %}
+        <fieldset>
+          <legend>{{ category }}</legend>
+          {% for name, price in foods %}
+            {% set value = category ~ '|' ~ name %}
+            <label class="check">
+              <input type="checkbox" name="food" value="{{ value }}" {% if value in selected %}checked{% endif %}>
+              {{ name }} <span class="muted">{{ price|pesos }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+      {% endfor %}
+      {% if not ns.any %}
+        <p class="empty">Your menu is empty. <a href="{{ url_for('menu') }}">Add some foods</a> first.</p>
+      {% endif %}
+      <label>Or type names, separated by commas
+        <input name="typed" value="{{ typed }}" placeholder="e.g. Adobo, Turon">
+      </label>
+      <button type="submit" name="go" value="1">Calculate total</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Result</h2>
+    {% if result %}
+      {% set found, missing, ambiguous, total = result %}
+      {% if found %}
+        <table>
+          <thead><tr><th>Food</th><th>Category</th><th class="num">Price</th></tr></thead>
+          <tbody>
+            {% for category, name, price in found %}
+              <tr><td>{{ name }}</td><td>{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot><tr><th colspan="2">Total</th><th class="num">{{ total|pesos }}</th></tr></tfoot>
+        </table>
+      {% endif %}
+      {% if missing %}
+        <p class="flash flash-error">Not on your menu: {{ missing|join(', ') }}</p>
+      {% endif %}
+      {% for name, categories in ambiguous %}
+        <p class="flash flash-error">{{ name }} is in {{ categories|join(' and ') }}, so it was not added. Tick the one you mean.</p>
+      {% endfor %}
+    {% elif error %}
+      <p class="flash flash-error">{{ error }}</p>
+    {% else %}
+      <p class="muted">Pick foods and press Calculate total. Each one is found by tree search and the prices are added exactly, in centavos.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

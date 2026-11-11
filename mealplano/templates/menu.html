@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ category }} · MealPLANO{% endblock %}
+{% block content %}
+<nav class="tabs category-tabs" aria-label="Categories">
+  {% for c, n in counts.items() %}
+    <a href="{{ url_for('menu', category=c) }}" {% if c == category %}aria-current="page"{% endif %}>
+      {{ c }} <span class="count">{{ n }}</span>
+    </a>
+  {% endfor %}
+</nav>
+
+<div class="grid">
+  <section class="card">
+    <div class="card-head">
+      <h1>{{ category }}</h1>
+      <form method="post" action="{{ url_for('undo') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="category" value="{{ category }}">
+        <button type="submit" class="secondary" {% if not undo_count %}disabled{% endif %}
+                title="Undo your last add, delete, or price change">
+          Undo{% if undo_count %} ({{ undo_count }}){% endif %}
+        </button>
+      </form>
+    </div>
+
+    {% if foods %}
+      <p class="muted">{{ foods|length }} food{{ 's' if foods|length != 1 }}, cheapest first (in-order traversal of the price-ordered tree).</p>
+      <div class="table-wrap">
+      <table>
+        <thead><tr><th>Food</th><th class="num">Price</th><th>Change price</th><th></th></tr></thead>
+        <tbody>
+          {% for name, price in foods %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="num">{{ price|pesos }}</td>
+              <td>
+                <form method="post" action="{{ url_for('update_price') }}" class="inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="category" value="{{ category }}">
+                  <input type="hidden" name="name" value="{{ name }}">
+                  <input name="price" inputmode="decimal" placeholder="New price"
+                         aria-label="New price for {{ name }}" required>
+                  <button type="submit" class="secondary small">Save</button>
+                </form>
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('delete_food') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="category" value="{{ category }}">
+                  <input type="hidden" name="name" value="{{ name }}">
+                  <button type="submit" class="danger small" aria-label="Delete {{ name }}">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    {% else %}
+      <p class="empty">No foods in {{ category }} yet. Add one with the form.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>Add a food</h2>
+    <form method="post" action="{{ url_for('add_food') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Name <input name="name" maxlength="50" placeholder="e.g. Adobo" required></label>
+      <label>Price (₱) <input name="price" inputmode="decimal" placeholder="e.g. 80.50" required></label>
+      <label>Category
+        <select name="category">
+          {% for c in counts %}<option {% if c == category %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit">Add food</button>
+    </form>
+    <p class="muted small-text">A name can appear once per category, ignoring capital letters. The same food can be in several categories, even at different prices.</p>
+  </section>
+</div>
+{% endblock %}

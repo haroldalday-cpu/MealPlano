@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Budget planner · MealPLANO{% endblock %}
+{% block content %}
+<div class="grid">
+  <section class="card">
+    <h1>Budget planner</h1>
+    <form method="get">
+      <label>Budget for the day (₱)
+        <input name="amount" value="{{ amount }}" inputmode="decimal" placeholder="e.g. 250" required>
+      </label>
+      <fieldset>
+        <legend>One food from each of</legend>
+        {% for c in ['Breakfast', 'Lunch', 'Dinner', 'Snacks'] %}
+          <label class="check"><input type="checkbox" name="category" value="{{ c }}" {% if c in chosen %}checked{% endif %}> {{ c }}</label>
+        {% endfor %}
+      </fieldset>
+      <button type="submit" name="go" value="1">Find best plan</button>
+    </form>
+    <p class="muted small-text">Finds the plan that gets as close to your budget as possible without going over.
+      It splits the categories into two halves, lists every subtotal each half can make, sorts both lists
+      with Merge Sort, and matches them with two pointers ("meet in the middle").</p>
+  </section>
+
+  <section class="card">
+    <h2>Plan</h2>
+    {% if error %}
+      <p class="flash flash-error">{{ error }}</p>
+    {% elif plan %}
+      <table>
+        <thead><tr><th>Category</th><th>Food</th><th class="num">Price</th></tr></thead>
+        <tbody>
+          {% for category, name, price in plan.picks %}
+            <tr><td>{{ category }}</td><td>{{ name }}</td><td class="num">{{ price|pesos }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><th colspan="2">Total</th><th class="num">{{ plan.total|pesos }}</th></tr></tfoot>
+      </table>
+      {% if plan.fits %}
+        {% if plan.remaining == 0 %}
+          <p class="verdict ok">Uses your budget exactly.</p>
+        {% else %}
+          <p class="verdict ok">The closest plan to your budget, with <strong>{{ plan.remaining|pesos }}</strong> left over.</p>
+        {% endif %}
+        <p class="muted small-text">For comparison, the cheapest possible plan costs {{ plan.cheapest_total|pesos }}.</p>
+      {% else %}
+        <p class="verdict short">No plan fits. Even the cheapest plan, shown above, is <strong>{{ plan.shortfall|pesos }}</strong> over your budget.</p>
+      {% endif %}
+    {% else %}
+      <p class="muted">Enter a budget and choose categories.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Sort by price · MealPLANO{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Sort by price</h1>
+  <form method="get" class="filters">
+    {% for c in ['Breakfast', 'Lunch', 'Dinner', 'Snacks'] %}
+      <label class="check"><input type="checkbox" name="category" value="{{ c }}" {% if c in chosen %}checked{% endif %}> {{ c }}</label>
+    {% endfor %}
+    <button type="submit" name="go" value="1">Sort cheapest first</button>
+  </form>
+  <p class="muted small-text">Each category's tree is already in price order; Merge Sort combines the chosen categories into one list. It is stable, so foods with the same price stay in alphabetical order.</p>
+
+  {% if error %}
+    <p class="flash flash-error">{{ error }}</p>
+  {% elif rows is not none %}
+    {% if rows %}
+      <table>
+        <thead><tr><th class="num">#</th><th>Food</th><th>Category</th><th class="num">Price</th></tr></thead>
+        <tbody>
+          {% for category, name, price in rows %}
+            <tr><td class="num muted">{{ loop.index }}</td><td>{{ name }}</td><td>{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty">No foods in the chosen categories.</p>
+    {% endif %}
+  {% endif %}
+</section>
+{% endblock %}

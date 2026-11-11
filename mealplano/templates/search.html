@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Search · MealPLANO{% endblock %}
+{% block content %}
+<section class="card narrow-wide">
+  <h1>Search for a food</h1>
+  <form method="get" class="row">
+    <input name="q" value="{{ query }}" placeholder="Food name" aria-label="Food name" maxlength="50" autofocus>
+    <button type="submit">Search</button>
+  </form>
+  <p class="muted small-text">Searches all four category trees, ignoring capital letters.</p>
+
+  {% if results %}
+    <div class="result">
+      <p class="big">{{ results[0][1] }}</p>
+      {% if results|length > 1 %}<p class="muted">Found in {{ results|length }} categories.</p>{% endif %}
+      <table>
+        <thead><tr><th>Category</th><th class="num">Price</th><th></th></tr></thead>
+        <tbody>
+          {% for category, name, price in results %}
+            <tr>
+              <td>{{ category }}</td>
+              <td class="num"><strong>{{ price|pesos }}</strong></td>
+              <td><a href="{{ url_for('menu', category=category) }}">Open {{ category }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% elif error %}
+    <p class="flash flash-error">{{ error }}</p>
+  {% endif %}
+</section>
+{% endblock %}

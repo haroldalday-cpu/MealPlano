@@ -1,0 +1,21 @@
+# Local data: SQLite database, backups, and the secret key that signs login cookies.
+# Created automatically on first run; never commit these.
+instance/
+
+# Python bytecode caches
+__pycache__/
+*.pyc
+
+# Test coverage output
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
