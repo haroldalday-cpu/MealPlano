@@ -2,6 +2,7 @@
 
 import re
 import unicodedata
+from datetime import date
 
 from mealplano.dsa import CATEGORIES
 
@@ -12,6 +13,11 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{3,30}$")
 MIN_PASSWORD = 8
 MAX_PASSWORD = 128
 _AMOUNT_RE = re.compile(r"^(\d+)(?:\.(\d{1,2}))?$")
+# [0-9], not \d: in Python \d also matches other scripts' digits, e.g. full-width "２".
+_DATE_RE = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2})$")
+_MONTH_RE = re.compile(r"^([0-9]{4})-([0-9]{2})$")
+PLAN_DAYS_BACK = 366          # the calendar accepts dates from about 1 year ago
+PLAN_DAYS_AHEAD = 731         # to about 2 years ahead
 
 
 class InputError(ValueError):
@@ -89,3 +95,44 @@ def check_password(password):
     if len(password) > MAX_PASSWORD:
         raise InputError(f"Password can be at most {MAX_PASSWORD} characters.")
     return password
+
+
+def date_window(today=None):
+    """(earliest, latest) dates the calendar accepts."""
+    today = today or date.today()
+    return (date.fromordinal(today.toordinal() - PLAN_DAYS_BACK),
+            date.fromordinal(today.toordinal() + PLAN_DAYS_AHEAD))
+
+
+def parse_date(text, today=None):
+    """Strict YYYY-MM-DD within the calendar's window, as a date."""
+    match = _DATE_RE.match(str(text or "").strip())
+    try:
+        day = date(*(int(part) for part in match.groups())) if match else None
+    except ValueError:
+        day = None
+    if day is None:
+        raise InputError("Please choose a valid date (YYYY-MM-DD).")
+    earliest, latest = date_window(today)
+    if not earliest <= day <= latest:
+        raise InputError(f"Choose a date from {earliest:%d %b %Y} to {latest:%d %b %Y}.")
+    return day
+
+
+def parse_month(text, today=None):
+    """YYYY-MM as (year, month). Anything invalid or outside the window falls back to this month."""
+    today = today or date.today()
+    match = _MONTH_RE.match(str(text or "").strip())
+    if match:
+        year, month = int(match.group(1)), int(match.group(2))
+        earliest, latest = date_window(today)
+        if 1 <= month <= 12 and (earliest.year, earliest.month) <= (year, month) <= (latest.year, latest.month):
+            return year, month
+    return today.year, today.month
+
+
+def parse_optional_pesos(text, what):
+    """Like parse_pesos, but a blank box means "not set" (None)."""
+    if not str(text or "").strip():
+        return None
+    return parse_pesos(text, what)

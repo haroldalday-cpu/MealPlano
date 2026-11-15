@@ -21,10 +21,11 @@
   </header>
   {% if g.user %}
     {% set pages = [('menu', 'Menu'), ('search', 'Search'), ('meal_total', 'Meal total'),
-                    ('sort_price', 'Sort by price'), ('budget', 'Budget planner'), ('tree_view', 'Tree view')] %}
+                    ('sort_price', 'Sort by price'), ('budget', 'Budget planner'), ('calendar_month', 'Calendar'),
+                    ('tree_view', 'Tree view')] %}
     <nav class="tabs main-nav" aria-label="Main">
       {% for endpoint, label in pages %}
-        <a href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a>
+        <a href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint or (endpoint == 'calendar_month' and request.endpoint == 'calendar_day') %}aria-current="page"{% endif %}>{{ label }}</a>
       {% endfor %}
     </nav>
   {% endif %}

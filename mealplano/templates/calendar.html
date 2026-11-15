@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Meal calendar · MealPLANO{% endblock %}
+{% block content %}
+{% set g_ = view.goals %}
+<section class="card">
+  <div class="card-head cal-head">
+    <h1>{{ view.first.strftime('%B %Y') }}</h1>
+    <div class="cal-nav">
+      {% if prev_month %}<a class="button-link secondary" href="{{ url_for('calendar_month', month=prev_month) }}">‹ Previous</a>{% endif %}
+      <a class="button-link secondary" href="{{ url_for('calendar_month') }}">This month</a>
+      {% if next_month %}<a class="button-link secondary" href="{{ url_for('calendar_month', month=next_month) }}">Next ›</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="cal-summary {{ 'over' if view.over else '' }}">
+    <span><strong>{{ view.total|pesos }}</strong> planned this month
+      {% if g_.monthly %} of {{ g_.monthly|pesos }}
+        {% if view.over %}: <strong>{{ (view.total - g_.monthly)|pesos }} over</strong>
+        {% else %}: {{ (g_.monthly - view.total)|pesos }} left{% endif %}
+      {% endif %}</span>
+    <span class="muted">{{ view.planned_days }} day{{ '' if view.planned_days == 1 else 's' }} planned</span>
+  </div>
+
+  <div class="cal" role="table" aria-label="Meal calendar for {{ view.first.strftime('%B %Y') }}">
+    <div class="cal-row cal-weekdays" role="row">
+      {% for name in weekdays %}<div role="columnheader">{{ name }}</div>{% endfor %}
+      <div role="columnheader">Week</div>
+    </div>
+    {% for week in view.weeks %}
+      <div class="cal-row" role="row">
+        {% for cell in week.days %}
+          {% set classes = ['cal-day'] %}
+          {% if not cell.in_month %}{% set classes = classes + ['outside'] %}{% endif %}
+          {% if cell.date == today %}{% set classes = classes + ['today'] %}{% endif %}
+          {% if cell.count %}{% set classes = classes + ['planned'] %}{% endif %}
+          {% if cell.over %}{% set classes = classes + ['over'] %}{% endif %}
+          <a role="cell" class="{{ classes|join(' ') }}" href="{{ url_for('calendar_day', date=cell.date.isoformat()) }}"
+             aria-label="{{ cell.date.strftime('%A %d %B') }}{% if cell.count %}: {{ cell.count }} meal{{ '' if cell.count == 1 else 's' }}, {{ cell.total|pesos }}{% if cell.over %}, over the daily budget{% endif %}{% endif %}">
+            <span class="cal-date"><span class="cal-dow">{{ cell.date.strftime('%a') }} </span>{{ cell.date.day }}</span>
+            {% if cell.count %}
+              <span class="cal-total">{{ cell.total|pesos }}</span>
+              <span class="cal-meals">{{ cell.count }}/4 meals</span>
+            {% endif %}
+          </a>
+        {% endfor %}
+        <div role="cell" class="cal-week {{ 'over' if week.over else '' }}">
+          <span class="cal-week-label">Week</span>
+          <span class="cal-total">{{ week.total|pesos }}</span>
+          {% if g_.weekly %}<span class="cal-meals">of {{ g_.weekly|pesos }}</span>{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <p class="muted small-text">Click a day to plan its meals. Days and weeks in orange are over budget.
+    Week and month totals come from a range query on an AVL tree of planned days, ordered by date.</p>
+</section>
+
+<section class="card narrow-wide">
+  <h2>Calendar budgets</h2>
+  <p class="muted small-text">Leave a box empty for no budget.</p>
+  <form method="post" action="{{ url_for('calendar_goals') }}" class="filters">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="month" value="{{ view.first.strftime('%Y-%m') }}">
+    <label>Per day (₱)<input name="daily" inputmode="decimal" value="{{ '%d.%02d'|format(g_.daily // 100, g_.daily % 100) if g_.daily else '' }}" placeholder="e.g. 200"></label>
+    <label>Per week (₱)<input name="weekly" inputmode="decimal" value="{{ '%d.%02d'|format(g_.weekly // 100, g_.weekly % 100) if g_.weekly else '' }}" placeholder="e.g. 1300"></label>
+    <label>Per month (₱)<input name="monthly" inputmode="decimal" value="{{ '%d.%02d'|format(g_.monthly // 100, g_.monthly % 100) if g_.monthly else '' }}" placeholder="e.g. 5000"></label>
+    <button type="submit">Save budgets</button>
+  </form>
+</section>
+{% endblock %}

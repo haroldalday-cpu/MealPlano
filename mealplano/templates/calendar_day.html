@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ view.date.strftime('%d %b %Y') }} · MealPLANO{% endblock %}
+{% block content %}
+{% set day_iso = view.date.isoformat() %}
+<p><a href="{{ url_for('calendar_month', month=view.date.strftime('%Y-%m')) }}">‹ Back to {{ view.date.strftime('%B %Y') }}</a></p>
+<div class="grid">
+  <section class="card">
+    <h1>{{ view.date.strftime('%A, %d %B %Y') }}</h1>
+    <table>
+      <thead><tr><th>Category</th><th>Planned</th><th class="num">Price</th><th></th></tr></thead>
+      <tbody>
+        {% for c in categories %}
+          {% set meal = view.meals.get(c) %}
+          <tr>
+            <td>{{ c }}</td>
+            {% if meal %}
+              <td>{{ meal[0] }}</td>
+              <td class="num">{{ meal[1]|pesos }}</td>
+              <td class="num">
+                <form method="post" action="{{ url_for('calendar_unplan') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="date" value="{{ day_iso }}">
+                  <input type="hidden" name="category" value="{{ c }}">
+                  <button type="submit" class="danger small">Remove</button>
+                </form>
+              </td>
+            {% else %}
+              <td class="muted">Nothing planned</td><td></td><td></td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr><th colspan="2">Day total</th><th class="num">{{ view.total|pesos }}</th><th></th></tr></tfoot>
+    </table>
+    {% if view.daily %}
+      {% if view.over %}
+        <p class="verdict short">{{ (view.total - view.daily)|pesos }} over your daily budget of {{ view.daily|pesos }}.</p>
+      {% else %}
+        <p class="verdict ok">{{ view.left|pesos }} left of your daily budget of {{ view.daily|pesos }}.</p>
+      {% endif %}
+    {% else %}
+      <p class="muted small-text">No daily budget set. Set one on the <a href="{{ url_for('calendar_month', month=view.date.strftime('%Y-%m')) }}">calendar</a>.</p>
+    {% endif %}
+    <p class="muted small-text">Prices are saved when you plan a meal, so changing the menu later does not change this day.</p>
+  </section>
+
+  <section class="card">
+    <h2>Plan a meal</h2>
+    {% for c in categories %}
+      <form method="post" action="{{ url_for('calendar_plan') }}" class="plan-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="date" value="{{ day_iso }}">
+        <input type="hidden" name="category" value="{{ c }}">
+        <label>{{ c }}
+          {% if view.menus[c] %}
+            <select name="name">
+              {% for name, price in view.menus[c] %}
+                <option value="{{ name }}" {% if view.meals.get(c) and view.meals[c][0] == name %}selected{% endif %}>{{ name }} · {{ price|pesos }}</option>
+              {% endfor %}
+            </select>
+          {% else %}
+            <span class="muted small-text">No {{ c|lower }} foods on your menu yet.</span>
+          {% endif %}
+        </label>
+        {% if view.menus[c] %}<button type="submit" class="secondary small">{{ 'Replace' if view.meals.get(c) else 'Plan' }}</button>{% endif %}
+      </form>
+    {% endfor %}
+
+    {% if view.meals|length < 4 %}
+      <h2 class="list-heading">Fill the empty slots</h2>
+      <form method="post" action="{{ url_for('calendar_autoplan') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="date" value="{{ day_iso }}">
+        <label>Budget for the empty slots (₱)
+          <input name="amount" inputmode="decimal" required
+                 value="{{ '%d.%02d'|format(view.left // 100, view.left % 100) if view.left and view.left > 0 else '' }}" placeholder="e.g. 150">
+        </label>
+        <button type="submit">Fill with the best plan</button>
+      </form>
+      <p class="muted small-text">Uses the budget planner: the plan closest to this amount without going over.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

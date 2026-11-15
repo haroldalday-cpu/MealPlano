@@ -42,6 +42,13 @@
           <p class="verdict ok">The closest plan to your budget, with <strong>{{ plan.remaining|pesos }}</strong> left over.</p>
         {% endif %}
         <p class="muted small-text">For comparison, the cheapest possible plan costs {{ plan.cheapest_total|pesos }}.</p>
+        <form method="post" action="{{ url_for('budget_save') }}" class="row save-plan">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% for category, name, price in plan.picks %}<input type="hidden" name="pick" value="{{ category }}|{{ name }}">{% endfor %}
+          <label class="sr-only" for="plan-date">Date</label>
+          <input id="plan-date" type="date" name="date" value="{{ today }}" required>
+          <button type="submit">Save to calendar</button>
+        </form>
       {% else %}
         <p class="verdict short">No plan fits. Even the cheapest plan, shown above, is <strong>{{ plan.shortfall|pesos }}</strong> over your budget.</p>
       {% endif %}

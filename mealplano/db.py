@@ -26,6 +26,26 @@ CREATE TABLE IF NOT EXISTS foods (
     price_centavos INTEGER NOT NULL CHECK (price_centavos > 0),
     UNIQUE (user_id, category, key)
 );
+
+-- Meal calendar: one food per category per day. The name and price are
+-- copied when the meal is planned, so later menu changes do not alter it.
+CREATE TABLE IF NOT EXISTS meal_plans (
+    id             INTEGER PRIMARY KEY,
+    user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    plan_date      TEXT NOT NULL,            -- YYYY-MM-DD
+    category       TEXT NOT NULL CHECK (category IN ('Breakfast','Lunch','Dinner','Snacks')),
+    display_name   TEXT NOT NULL,
+    price_centavos INTEGER NOT NULL CHECK (price_centavos > 0),
+    UNIQUE (user_id, plan_date, category)
+);
+
+-- Calendar budgets; NULL means "no budget set" for that period.
+CREATE TABLE IF NOT EXISTS budget_goals (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    daily   INTEGER CHECK (daily > 0),
+    weekly  INTEGER CHECK (weekly > 0),
+    monthly INTEGER CHECK (monthly > 0)
+);
 """
 
 # A name is unique per category, not per user, so "Adobo" can be in Lunch AND
@@ -149,3 +169,58 @@ def update_food_price(db_path, user_id, category, key, price):
             "UPDATE foods SET price_centavos = ? WHERE user_id = ? AND category = ? AND key = ?",
             (price, user_id, category, key),
         ).rowcount
+
+
+# ---- meal calendar ----
+
+def load_plans(db_path, user_id):
+    """All of one user's planned meals in insertion order (ORDER BY id)."""
+    with connect(db_path) as conn:
+        return conn.execute(
+            "SELECT plan_date, category, display_name, price_centavos FROM meal_plans "
+            "WHERE user_id = ? ORDER BY id",
+            (user_id,),
+        ).fetchall()
+
+
+def upsert_plans(db_path, user_id, plan_date, meals):
+    """Plan several meals for one date in ONE transaction: all are saved or none.
+
+    meals = [(category, display_name, price)]. A category already planned that
+    day is replaced.
+    """
+    with connect(db_path) as conn:
+        conn.executemany(
+            "INSERT INTO meal_plans (user_id, plan_date, category, display_name, price_centavos) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT (user_id, plan_date, category) DO UPDATE SET "
+            "display_name = excluded.display_name, price_centavos = excluded.price_centavos",
+            [(user_id, plan_date, c, name, price) for c, name, price in meals],
+        )
+
+
+def delete_plan(db_path, user_id, plan_date, category):
+    with connect(db_path) as conn:
+        return conn.execute(
+            "DELETE FROM meal_plans WHERE user_id = ? AND plan_date = ? AND category = ?",
+            (user_id, plan_date, category),
+        ).rowcount
+
+
+def get_goals(db_path, user_id):
+    """(daily, weekly, monthly) in centavos; None for a budget that is not set."""
+    with connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT daily, weekly, monthly FROM budget_goals WHERE user_id = ?", (user_id,)
+        ).fetchone()
+    return (row["daily"], row["weekly"], row["monthly"]) if row else (None, None, None)
+
+
+def set_goals(db_path, user_id, daily, weekly, monthly):
+    with connect(db_path) as conn:
+        conn.execute(
+            "INSERT INTO budget_goals (user_id, daily, weekly, monthly) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (user_id) DO UPDATE SET "
+            "daily = excluded.daily, weekly = excluded.weekly, monthly = excluded.monthly",
+            (user_id, daily, weekly, monthly),
+        )

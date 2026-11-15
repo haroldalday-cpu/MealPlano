@@ -130,3 +130,52 @@ td form { margin: 0; }
 .list-heading { margin-top: 16px; }
 .traversal { padding-left: 2em; }
 .traversal li { padding: 3px 0; }
+
+/* ---- meal calendar ---- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+a.button-link { display: inline-block; padding: 6px 12px; border-radius: 6px; font-weight: 600;
+                text-decoration: none; white-space: nowrap; }
+a.button-link.secondary { color: var(--accent); border: 1px solid var(--accent); }
+a.button-link.secondary:hover { background: var(--accent-soft); }
+.cal-head { flex-wrap: wrap; }
+.cal-nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.cal-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px;
+               margin: 8px 0 12px; padding: 10px 12px; border-radius: 6px; background: var(--ok-bg); color: var(--ok-text); }
+.cal-summary.over { background: var(--bad-bg); color: var(--bad-text); }
+.cal-summary .muted { color: inherit; opacity: .8; }
+
+.cal { display: grid; gap: 4px; }
+.cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) minmax(0, 1.1fr); gap: 4px; }
+.cal-weekdays div { font-size: .8rem; font-weight: 700; color: var(--accent-hover); text-align: center; padding: 2px 0; }
+.cal-day, .cal-week { display: flex; flex-direction: column; gap: 2px; min-height: 76px; padding: 6px;
+                      border: 1px solid var(--border); border-radius: 8px; font-size: .85rem; }
+.cal-day { color: var(--text); text-decoration: none; background: var(--card); }
+.cal-day:hover { border-color: var(--accent-bright); background: var(--accent-soft); }
+.cal-day:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 1px; }
+.cal-day.outside { color: var(--muted); background: #fcfaf8; }
+.cal-day.planned { background: var(--accent-soft); }
+.cal-day.today .cal-date { color: #fff; background: var(--accent-bright); border-radius: 999px; padding: 0 7px; }
+.cal-day.over { border: 2px solid var(--accent-bright); background: var(--badge); }
+.cal-date { align-self: flex-start; font-weight: 700; }
+.cal-dow { display: none; }
+.cal-total { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cal-meals { color: var(--muted); font-size: .75rem; }
+.cal-week { background: #fcfaf8; justify-content: center; }
+.cal-week-label { font-size: .75rem; color: var(--muted); display: none; }
+.cal-week.over { border: 2px solid var(--accent-bright); background: var(--badge); }
+.save-plan { margin-top: 12px; flex-wrap: wrap; }
+.save-plan input { width: auto; flex: 1 1 160px; }
+.plan-form { display: flex; align-items: flex-end; gap: 8px; }
+.plan-form label { flex: 1; margin: 8px 0; min-width: 0; }
+.plan-form button { margin-bottom: 8px; }
+
+/* Phones: the grid becomes a list of planned days and week totals. */
+@media (max-width: 640px) {
+  .cal-weekdays { display: none; }
+  .cal-row { grid-template-columns: minmax(0, 1fr); }
+  .cal-day { min-height: 0; flex-direction: row; align-items: baseline; gap: 12px; }
+  .cal-day:not(.planned):not(.today) { display: none; }
+  .cal-dow { display: inline; }
+  .cal-week { min-height: 0; flex-direction: row; gap: 12px; }
+  .cal-week-label { display: inline; }
+}

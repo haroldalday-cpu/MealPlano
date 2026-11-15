@@ -4,11 +4,13 @@ Run from the project folder:
     python -m mealplano.seed_demo
 
 The demo login is listed in README.md. Running this again resets the demo
-account's foods to the list below; other accounts are not touched.
+account's foods to the list below, and plans its meal calendar for the next
+10 days starting today (one day deliberately over budget); other accounts are not touched.
 Stop the web server first, or log the demo account out and in again afterwards,
 because a running server keeps each logged-in user's trees in memory.
 """
 
+from datetime import date, timedelta
 from pathlib import Path
 
 from mealplano import auth, db
@@ -34,6 +36,23 @@ MENU = [
     ("Snacks", "Kwek-Kwek", 2500), ("Snacks", "Bibingka", 3525),
 ]
 
+# Calendar budgets in centavos: P200 a day, P1,300 a week, P5,000 a month.
+GOALS = (20000, 130000, 500000)
+
+# One day per row, starting today: (Breakfast, Lunch, Dinner, Snacks); None = not planned.
+CALENDAR = [
+    ("Taho", "Pancit Canton", "Menudo", "Kwek-Kwek"),               # P200.00, exactly the budget
+    ("Pandesal with Egg", "Tinola", "Pinakbet", "Puto"),             # P185.00
+    ("Champorado", "Adobo", "Laing", None),                          # P185.50
+    ("Arroz Caldo", "Bicol Express", "Pinakbet", "Turon"),           # P195.00
+    ("Tapsilog", "Kare-Kare", "Lechon Kawali", "Halo-Halo"),         # P440.00, fiesta: over budget
+    ("Taho", "Pancit Canton", "Laing", "Banana Cue"),                # P170.00
+    (None, "Sinigang na Baboy", None, None),                         # P120.00, only lunch so far
+    ("Pandesal with Egg", "Adobo", "Menudo", None),                  # P200.50, just over
+    ("Arroz Caldo", "Tinola", "Laing", "Puto"),                      # P190.00
+    ("Champorado", "Bicol Express", "Pinakbet", "Kwek-Kwek"),        # P205.00, just over
+]
+
 
 def main():
     DB_PATH.parent.mkdir(exist_ok=True)
@@ -48,12 +67,21 @@ def main():
         user_id = row["id"]
         with db.connect(db_path) as conn:
             conn.execute("DELETE FROM foods WHERE user_id = ?", (user_id,))
-        print(f"Reset foods for existing demo account '{DEMO_USERNAME}'.")
+            conn.execute("DELETE FROM meal_plans WHERE user_id = ?", (user_id,))
+        print(f"Reset foods and calendar for existing demo account '{DEMO_USERNAME}'.")
 
     service = FoodService(db_path)
     for category, name, price in MENU:
         service.add_food(user_id, category, name, price)
     print(f"Added {len(MENU)} foods. Database: {db_path}")
+
+    service.set_goals(user_id, *GOALS)
+    today = date.today()
+    categories = ("Breakfast", "Lunch", "Dinner", "Snacks")
+    for offset, names in enumerate(CALENDAR):
+        picks = [(c, n) for c, n in zip(categories, names) if n is not None]
+        service.save_budget_plan(user_id, today + timedelta(days=offset), picks)
+    print(f"Planned {len(CALENDAR)} days from {today:%d %b %Y} and set the calendar budgets.")
     print("Log in with the demo account listed in README.md.")
 
 
