@@ -17,9 +17,13 @@ class BST:
     def __len__(self):
         return self.size
 
+    # Builds each new node. A subclass can give nodes a different ordering
+    # key (PriceAVLTree uses (price, name)) without rewriting insert().
+    _new_node = staticmethod(FoodNode)
+
     def insert(self, display_name, price_centavos):
-        """Insert a food. Return False if the name is already in this tree."""
-        new = FoodNode(display_name, price_centavos)
+        """Insert a food. Return False if its key is already in this tree."""
+        new = self._new_node(display_name, price_centavos)
         if self.root is None:
             self.root = new
             self.size = 1
@@ -45,6 +49,19 @@ class BST:
     def search(self, name):
         """Return the node for this name, or None if it is not in the tree."""
         key = make_key(name)
+        current = self.root
+        while current is not None:
+            if key == current.key:
+                return current
+            current = current.left if key < current.key else current.right
+        return None
+
+    def search_key(self, key):
+        """Return the node with this exact ordering key, or None. O(height).
+
+        Same loop as search(), but the caller gives the key itself, e.g.
+        (8050, "adobo") for a tree ordered by (price, name).
+        """
         current = self.root
         while current is not None:
             if key == current.key:

@@ -41,6 +41,14 @@ class PriceOrderTests(unittest.TestCase):
         self.assertEqual(self.tree.search_exact(7500, "tinola").display_name, "Tinola")
         self.assertIsNone(self.tree.search_exact(7600, "Tinola"))         # right name, wrong price
 
+    def test_search_key_agrees_with_search_exact(self):
+        """search_key is what the lookup benchmark uses on its price-keyed trees."""
+        for node in self.tree.inorder():
+            self.assertIs(self.tree.search_key(node.key),
+                          self.tree.search_exact(node.price, node.display_name))
+        self.assertIsNone(self.tree.search_key((7500, "tinola~")))       # absent, sorts next to Tinola
+        self.assertIsNone(PriceAVLTree().search_key((100, "x")))
+
     def test_duplicate_name_rejected_even_at_another_price(self):
         self.assertFalse(self.tree.insert("adobo", 9999))
         self.assertEqual(len(self.tree), 6)

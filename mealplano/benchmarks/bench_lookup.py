@@ -1,8 +1,18 @@
-"""Comparison A (PRD Section 9): finding a food by name.
+"""Comparison A (PRD Section 9): finding a food by its price key.
+
+Every structure is keyed the way the app's category trees are: by
+(price, name), so cheaper foods come first and the name only breaks ties.
+Every food in a run has a different price.
 
 Approaches: linear search on an unsorted list, binary search on a sorted array,
 plain BST, AVL tree. Each is measured at several sizes, with foods inserted in
-random order and in alphabetical order (the plain BST's worst case).
+random order and in ascending price order, cheapest first (the plain BST's
+worst case: every new food is the most expensive so far, so the tree becomes
+a chain going right).
+
+The two trees here skip the app's duplicate-NAME check (PriceAVLTree.insert,
+an O(n) walk), for the same reason UnsortedList skips duplicates: this
+measures the search structure itself, not FR-2.
 
 Measured per (approach, order, n):
   insert_s   time to insert all n foods (median of 5 builds)
@@ -21,13 +31,15 @@ import random
 
 from mealplano.benchmarks.common import (RESULTS, RUNS, SEED, line_chart, markdown_table,
                                          median_time, write_csv)
-from mealplano.dsa import BST, AVLTree
+from mealplano.dsa import BST, AVLTree, PriceAVLTree
 from mealplano.dsa.searching import binary_search, linear_search, sorted_insert
 
 FULL_SIZES = [100, 1_000, 10_000, 50_000]
 QUICK_SIZES = [100, 1_000]
-BST_SORTED_CAP = 10_000      # O(n^2) build: alphabetical input to a plain BST
+BST_SORTED_CAP = 10_000      # O(n^2) build: ascending prices into a plain BST
 LOOKUPS = 1_000
+ORDERS = ["random", "ascending"]
+ORDER_TITLES = {"random": "random insert order", "ascending": "ascending price order (cheapest first)"}
 
 
 # ---- the four approaches, each with build() and lookup() ----
@@ -71,24 +83,35 @@ class _TreeApproach:
         self.tree = self.tree_class()
 
     def insert(self, key, price):
-        self.tree.insert(key, price)
+        self.tree.insert(key[1], price)       # key = (price, name): the tree rebuilds it
 
     def lookup(self, key):
-        node = self.tree.search(key)
+        node = self.tree.search_key(key)
         return node.price if node is not None else None
 
     def height(self):
         return self.tree.height()
 
 
+class PriceBST(BST):
+    """Plain BST whose nodes are keyed by (price, name), like the app's trees."""
+    _new_node = staticmethod(PriceAVLTree._new_node)
+
+
+class PriceAVL(AVLTree):
+    """AVL tree keyed by (price, name): PriceAVLTree's ordering and balancing,
+    without its O(n) duplicate-name check."""
+    _new_node = staticmethod(PriceAVLTree._new_node)
+
+
 class PlainBST(_TreeApproach):
     label = "Plain BST"
-    tree_class = BST
+    tree_class = PriceBST
 
 
 class AVL(_TreeApproach):
     label = "AVL tree"
-    tree_class = AVLTree
+    tree_class = PriceAVL
 
 
 APPROACHES = [UnsortedList, SortedArray, PlainBST, AVL]
@@ -97,20 +120,27 @@ APPROACHES = [UnsortedList, SortedArray, PlainBST, AVL]
 # ---- test data ----
 
 def make_foods(n, order, rng):
-    """n unique (key, price) pairs, in random or alphabetical order."""
-    keys = [f"food{i:06d}" for i in range(n)]
-    foods = [(k, rng.randint(1, 10_000_000)) for k in keys]
-    if order == "random":
+    """n (key, price) pairs with key = (price, name), in random or ascending price order.
+
+    Prices are all different (P0.01 to P100,000.00, drawn without repeats).
+    The name is passed to the trees as the food's name; they lower-case it to
+    build the same (price, name) key.
+    """
+    prices = rng.sample(range(1, 10_000_001), n)
+    foods = [((price, f"food{i:06d}"), price) for i, price in enumerate(prices)]
+    if order == "ascending":
+        foods.sort()                          # cheapest first: the plain BST's worst case
+    else:
         rng.shuffle(foods)
-    return foods                              # keys were generated already sorted
+    return foods
 
 
 def make_lookups(foods, rng):
     """1,000 lookups: half present names, half absent, shuffled together."""
     present = [k for k, _ in rng.sample(foods, min(LOOKUPS // 2, len(foods)))]
-    # "food000123~" is never a real name, and it sorts right next to a real
-    # one, so absent searches go just as deep as present ones.
-    absent = [k + "~" for k, _ in rng.choices(foods, k=LOOKUPS - len(present))]
+    # (price, "food000123~") is never a real key, and it sorts right after a
+    # real one, so absent searches go just as deep as present ones.
+    absent = [(price, name + "~") for (price, name), _ in rng.choices(foods, k=LOOKUPS - len(present))]
     lookups = present + absent
     rng.shuffle(lookups)
     return lookups
@@ -123,11 +153,12 @@ def build(approach, foods):
     return s
 
 
+
 # ---- the benchmark ----
 
 def run(sizes, runs):
     rows = []
-    for order in ["random", "alphabetical"]:
+    for order in ORDERS:
         for n in sizes:
             rng = random.Random(SEED + n)     # same data for every approach at this n
             foods = make_foods(n, order, rng)
@@ -136,7 +167,7 @@ def run(sizes, runs):
             expected = [truth.get(k) for k in lookups]
 
             for approach in APPROACHES:
-                if approach is PlainBST and order == "alphabetical" and n > BST_SORTED_CAP:
+                if approach is PlainBST and order == "ascending" and n > BST_SORTED_CAP:
                     print(f"  skip  {approach.label:32} {order:12} n={n:>6}  (O(n^2) cap)")
                     continue
 
@@ -170,19 +201,19 @@ def charts(rows, sizes):
                 for a in APPROACHES}
 
     paths = []
-    for order in ["random", "alphabetical"]:
+    for order in ORDERS:
         paths.append(line_chart(f"lookup_search_{order}.png",
-                                f"Average search time, {order} insert order",
+                                f"Average search time, {ORDER_TITLES[order]}",
                                 "microseconds per search (log scale)",
                                 series(order, "search_us")))
         paths.append(line_chart(f"lookup_insert_{order}.png",
-                                f"Time to insert all n foods, {order} order",
+                                f"Time to insert all n foods, {ORDER_TITLES[order]}",
                                 "seconds (log scale)",
                                 series(order, "insert_s")))
 
     heights = {}
     for a in (PlainBST, AVL):
-        for order in ["random", "alphabetical"]:
+        for order in ORDERS:
             heights[f"{a.label}, {order}"] = [(r["n"], r["height"]) for r in rows
                                               if r["approach"] == a.label and r["order"] == order]
     heights["log2(n+1), the best possible"] = [(n, math.log2(n + 1)) for n in sizes]
@@ -196,7 +227,8 @@ def summary(rows):
     text = ["# Comparison A: lookup benchmark results", "",
             f"Seed {SEED}, median of {RUNS} runs, {LOOKUPS} lookups per round "
             "(half present, half absent).",
-            f"Plain BST with alphabetical input is capped at n = {BST_SORTED_CAP:,} "
+            "Every structure is keyed by (price, name), like the app's trees; prices are unique.",
+            f"Plain BST with ascending-price input is capped at n = {BST_SORTED_CAP:,} "
             "because building it is O(n^2).", "",
             markdown_table(rows, cols), ""]
     path = RESULTS / "lookup_summary.md"

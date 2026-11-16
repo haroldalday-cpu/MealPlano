@@ -65,13 +65,7 @@ class PriceAVLTree(AVLTree):
 
     def search_exact(self, price_centavos, name):
         """Find a food by its full ordering key (price, name). O(log n)."""
-        key = (price_centavos, make_key(name))
-        current = self.root
-        while current is not None:
-            if key == current.key:
-                return current
-            current = current.left if key < current.key else current.right
-        return None
+        return self.search_key((price_centavos, make_key(name)))
 
     def delete(self, name):
         """Remove a food by name. Return (display_name, price) removed, or None."""

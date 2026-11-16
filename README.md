@@ -26,8 +26,10 @@ node is one planned day with at most one food per category.
 | Open a day, plan or remove a meal | O(log n) | AVL search, insert, delete (n = planned days) |
 | Week or month total | O(log n + k) | Range query: an in-order walk that skips subtrees outside the dates (k = days in range) |
 
-The name-ordered `BST` and `AVLTree` classes are still in the `dsa` package: the lookup benchmark
-(report Section 5, Comparison A) compares search structures by name lookup using them.
+The lookup benchmark (report Section 5, Comparison A) keys every structure the same way, by
+(price, name), and uses ascending prices (cheapest first) as the plain BST's worst case. The
+name-ordered `BST` and `AVLTree` classes are still in the `dsa` package; the benchmark's trees are
+small subclasses of them with the price key.
 
 ## Quick start
 
@@ -160,7 +162,7 @@ Run `python -m mealplano.seed_demo` and start the server before the defense. Eac
 
     *"A week or month total is a range query: walk the tree in order, but skip any subtree that is entirely before the first date or after the last one. That is O(log n + k)."*
 11. **Restart the server**, log in again: everything is still there (FR-20).
-12. **Benchmarks:** show `lookup_search_alphabetical.png` and `sort_sorted.png`. *"Alphabetical input makes the plain BST 263× slower than AVL; sorted input makes Quick Sort 290× slower than Merge Sort."*
+12. **Benchmarks:** show `lookup_search_ascending.png` and `sort_sorted.png`. *"Adding foods cheapest first makes the plain BST 195× slower than AVL at 10,000 foods; sorted input makes Quick Sort 290× slower than Merge Sort."*
 
 Likely panel questions, with the short answer:
 

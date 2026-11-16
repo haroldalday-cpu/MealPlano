@@ -7,7 +7,7 @@ about 1.44 * log2(n), so recursion depth stays small and is safe here.
 """
 
 from .bst import BST
-from .node import FoodNode, make_key
+from .node import make_key
 
 
 def _height(node):
@@ -73,7 +73,7 @@ class AVLTree(BST):
 
     def insert(self, display_name, price_centavos):
         """Insert a food and rebalance. Return False if the name is already here."""
-        new = FoodNode(display_name, price_centavos)
+        new = self._new_node(display_name, price_centavos)
         self._inserted = False
         self.root = self._insert(self.root, new)
         if self._inserted:
