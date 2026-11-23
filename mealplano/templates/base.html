@@ -1,4 +1,4 @@
-<!doctype html>
+{% import "_art.html" as art %}<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="{{ url_for('index') }}">Meal<span>PLANO</span></a>
+  <header class="topbar awning">
+    <a class="brand" href="{{ url_for('index') }}">{{ art.hat_icon() }}<span class="brand-text">Meal<span>PLANO</span></span></a>
     {% if g.user %}
       <div class="account">
         <span class="who">{{ g.user['username'] }}</span>
@@ -37,6 +37,11 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+  <footer class="counter" aria-hidden="true">
+    <div class="counter-items">
+      {% for c in ['Breakfast', 'Lunch', 'Dinner', 'Snacks'] %}{{ art.food_icon(c) }}{% endfor %}
+    </div>
+  </footer>
   {% block scripts %}{% endblock %}
 </body>
 </html>

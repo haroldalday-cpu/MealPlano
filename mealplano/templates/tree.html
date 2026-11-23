@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}Tree view · MealPLANO{% endblock %}
 {% block content %}
 <section class="card">
@@ -72,7 +73,10 @@
       {% endfor %}
     </ol>
   {% else %}
-    <p class="empty">{{ category }} is empty.</p>
+    <div class="empty empty-chef">
+      {{ art.chef_says('happy', 'No dishes, no tree. Add one and watch it grow!', 'sm') }}
+      <p>{{ category }} is empty.</p>
+    </div>
   {% endif %}
 </section>
 {% endblock %}

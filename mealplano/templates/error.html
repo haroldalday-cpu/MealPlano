@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}{{ title }} · MealPLANO{% endblock %}
 {% block content %}
 <section class="card narrow-wide">
+  {{ art.chef_says('dizzy', 'Whoops! Something got burnt.') }}
   <h1>{{ title }}</h1>
   <p>{{ message }}</p>
   <p><a href="{{ url_for('index') }}">Back to MealPLANO</a></p>

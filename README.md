@@ -54,7 +54,7 @@ it on the morning of the defense.
 ## Running the tests and benchmarks
 
 ```bash
-python -m unittest discover -s mealplano/tests -t . -v      # 267 tests
+python -m unittest discover -s mealplano/tests -t . -v      # 278 tests
 python -m coverage run --source=mealplano --omit="mealplano/tests/*,mealplano/benchmarks/*" -m unittest discover -s mealplano/tests -t .
 python -m coverage report                                    # 99% line coverage
 python -m mealplano.benchmarks.bench_lookup                  # Comparison A, a few minutes
@@ -131,6 +131,20 @@ browser ──HTTP──> app.py / food_routes.py   (validation, sessions, CSRF)
 | `instance/secret_key` | Random key that signs login cookies. Created on first run. Do not share or submit it. |
 | `BUG_LOG.md` | Every bug found, its cause, fix, and the test that now guards it. |
 | `mealplano/benchmarks/results/` | Benchmark CSVs, summaries, and charts used in report Section 5. |
+
+## Look and feel
+
+The site is styled like a cheerful cooking game: a striped shop awning, a wooden counter, order
+tickets with "EXACT!" / "FITS!" / "OVER" stamps and a 0-3 star score on the budget planner, a chef
+mascot whose face follows the result, and small animations (new foods slide in with a "+₱80.50"
+popup).
+
+* **All art is original**, drawn for this project as inline SVG in `mealplano/templates/_art.html`
+  and coloured in `static/style.css`. No images, fonts, sounds or characters from any game or
+  other third party are used.
+* Pure CSS, no extra JavaScript, so the Content-Security-Policy is unchanged; the tests check
+  every page for inline styles and inline scripts.
+* Every animation is switched off when the operating system's "reduce motion" setting is on.
 
 ## Security measures
 

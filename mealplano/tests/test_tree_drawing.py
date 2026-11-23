@@ -90,7 +90,7 @@ class TreePageTests(FoodPageCase):
 
     def test_empty_category_has_no_svg(self):
         page = self.client.get("/tree?category=Snacks").get_data(as_text=True)
-        self.assertNotIn("<svg", page)
+        self.assertNotIn("tree-svg", page)               # no tree drawing (decorative art is still there)
         self.assertIn("Snacks is empty.", page)
 
     def test_names_are_escaped_inside_the_drawing(self):

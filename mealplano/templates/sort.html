@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}Sort by price · MealPLANO{% endblock %}
 {% block content %}
 <section class="card">
   <h1>Sort by price</h1>
   <form method="get" class="filters">
     {% for c in ['Breakfast', 'Lunch', 'Dinner', 'Snacks'] %}
-      <label class="check"><input type="checkbox" name="category" value="{{ c }}" {% if c in chosen %}checked{% endif %}> {{ c }}</label>
+      <label class="check"><input type="checkbox" name="category" value="{{ c }}" {% if c in chosen %}checked{% endif %}> {{ art.food_icon(c) }}{{ c }}</label>
     {% endfor %}
     <button type="submit" name="go" value="1">Sort cheapest first</button>
   </form>
@@ -19,12 +20,15 @@
         <thead><tr><th class="num">#</th><th>Food</th><th>Category</th><th class="num">Price</th></tr></thead>
         <tbody>
           {% for category, name, price in rows %}
-            <tr><td class="num muted">{{ loop.index }}</td><td>{{ name }}</td><td>{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
+            <tr><td class="num muted">{{ loop.index }}</td><td>{{ name }}</td><td class="with-icon">{{ art.food_icon(category) }}{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <p class="empty">No foods in the chosen categories.</p>
+      <div class="empty empty-chef">
+        {{ art.chef_says('worried', 'Nothing to line up here yet.', 'sm') }}
+        <p>No foods in the chosen categories.</p>
+      </div>
     {% endif %}
   {% endif %}
 </section>

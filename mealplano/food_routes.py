@@ -8,7 +8,7 @@ Calendar changes (plan, remove, fill, budgets, save a budget plan) are POST form
 
 from datetime import date, timedelta
 
-from flask import flash, g, redirect, render_template, request, url_for
+from flask import flash, g, redirect, render_template, request, session, url_for
 
 from mealplano.dsa import CATEGORIES
 from mealplano.food_service import TRAVERSALS
@@ -24,6 +24,31 @@ ORDER_LABELS = {
 
 
 WEEKDAY_NAMES = ("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+
+
+def plan_stars(plan, budget_centavos):
+    """0 to 3 stars for a budget plan, like a cooking game's order score.
+
+    3 stars: uses the budget to within 2%. 2 stars: within 10%. 1 star: fits.
+    0 stars: no plan fits. Integer maths only (centavos), so no rounding surprises.
+    """
+    if not plan or not plan["fits"]:
+        return 0
+    left = plan["remaining"]
+    if left * 50 <= budget_centavos:          # left <= 2% of the budget
+        return 3
+    if left * 10 <= budget_centavos:          # left <= 10%
+        return 2
+    return 1
+
+
+def chef_mood_for_plan(stars, plan):
+    """Which face the chef makes next to a budget plan."""
+    if not plan:
+        return "happy"
+    if not plan["fits"]:
+        return "worried"
+    return "proud" if stars == 3 else "happy"
 
 
 def _category_arg(value, default="Breakfast"):
@@ -54,9 +79,15 @@ def register_food_routes(app, service, login_required):
     @login_required
     def menu():
         category = _category_arg(request.args.get("category"))
+        # Shown once: the row that was just added or re-priced gets a highlight
+        # and a "+P80.50" popup (static/style.css), then the session forgets it.
+        just_added = session.pop("just_added", None)
+        just_updated = session.pop("just_updated", None)
         return render_template(
             "menu.html",
             category=category,
+            just_added=just_added if just_added and just_added[0] == category else None,
+            just_updated=just_updated if just_updated and just_updated[0] == category else None,
             foods=service.menu(uid(), category),
             counts=service.counts(uid()),
             undo_count=service.undo_count(uid()),
@@ -70,6 +101,7 @@ def register_food_routes(app, service, login_required):
             price = parse_pesos(request.form.get("price"))
             cat, name, price = service.add_food(uid(), category, request.form.get("name"), price)
             flash(f"Added {name} to {cat} at {format_pesos(price)}.")
+            session["just_added"] = [cat, name, price]       # highlighted once on the menu
         except InputError as err:
             flash(str(err), "error")
         return back_to_menu(category)
@@ -94,6 +126,7 @@ def register_food_routes(app, service, login_required):
             cat, name, old, new = service.update_price(uid(), request.form.get("category"),
                                                        request.form.get("name"), new_price)
             flash(f"{name}: {format_pesos(old)} → {format_pesos(new)}.")
+            session["just_updated"] = [cat, name, old, new]
             return back_to_menu(cat)
         except InputError as err:
             flash(str(err), "error")
@@ -107,6 +140,9 @@ def register_food_routes(app, service, login_required):
             flash("Nothing to undo.", "error")
             return back_to_menu()
         flash(_describe_undo(entry))
+        action, category, name, price = entry
+        if action == "add":                                   # a deleted food came back
+            session["just_added"] = [category, name, price]
         return back_to_menu(entry[1])
 
     # ---------- reads ----------
@@ -161,7 +197,7 @@ def register_food_routes(app, service, login_required):
     def budget():
         chosen = [c for c in request.args.getlist("category") if c in CATEGORIES]
         amount = request.args.get("amount", "")
-        plan, error = None, None
+        plan, error, budget_centavos = None, None, None
         if "go" in request.args:
             try:
                 budget_centavos = parse_pesos(amount, "Budget")
@@ -170,9 +206,11 @@ def register_food_routes(app, service, login_required):
                 plan = service.budget(uid(), chosen, budget_centavos)
             except ValueError as err:                 # InputError or BudgetError
                 error = str(err)
+        stars = plan_stars(plan, budget_centavos)
         return render_template("budget.html", chosen=chosen or list(CATEGORIES),
                                amount=amount, plan=plan, error=error,
-                               today=date.today().isoformat())
+                               today=date.today().isoformat(), stars=stars,
+                               mood=chef_mood_for_plan(stars, plan))
 
     @app.route("/tree")
     @login_required

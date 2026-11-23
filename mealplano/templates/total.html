@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}Meal total · MealPLANO{% endblock %}
 {% block content %}
 <div class="grid">
@@ -9,7 +10,7 @@
       {% for category, foods in menus.items() if foods %}
         {% set ns.any = true %}
         <fieldset>
-          <legend>{{ category }}</legend>
+          <legend class="with-icon">{{ art.food_icon(category) }}{{ category }}</legend>
           {% for name, price in foods %}
             {% set value = category ~ '|' ~ name %}
             <label class="check">
@@ -20,7 +21,10 @@
         </fieldset>
       {% endfor %}
       {% if not ns.any %}
-        <p class="empty">Your menu is empty. <a href="{{ url_for('menu') }}">Add some foods</a> first.</p>
+        <div class="empty empty-chef">
+          {{ art.chef_says('happy', "My kitchen is empty! Let's stock the menu first.", 'sm') }}
+          <p>Your menu is empty. <a href="{{ url_for('menu') }}">Add some foods</a> first.</p>
+        </div>
       {% endif %}
       <label>Or type names, separated by commas
         <input name="typed" value="{{ typed }}" placeholder="e.g. Adobo, Turon">
@@ -29,20 +33,23 @@
     </form>
   </section>
 
-  <section class="card">
+  <section class="card rail-card">
     <h2>Result</h2>
     {% if result %}
       {% set found, missing, ambiguous, total = result %}
       {% if found %}
-        <table>
-          <thead><tr><th>Food</th><th>Category</th><th class="num">Price</th></tr></thead>
-          <tbody>
-            {% for category, name, price in found %}
-              <tr><td>{{ name }}</td><td>{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
-            {% endfor %}
-          </tbody>
-          <tfoot><tr><th colspan="2">Total</th><th class="num">{{ total|pesos }}</th></tr></tfoot>
-        </table>
+        <div class="order-rail" aria-hidden="true"></div>
+        {% call art.ticket('Bill', found|length ~ ' item' ~ ('' if found|length == 1 else 's'), 'ticket-drop') %}
+          <table class="ticket-table">
+            <thead><tr><th>Food</th><th>Category</th><th class="num">Price</th></tr></thead>
+            <tbody>
+              {% for category, name, price in found %}
+                <tr><td>{{ name }}</td><td class="with-icon">{{ art.food_icon(category) }}{{ category }}</td><td class="num">{{ price|pesos }}</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot><tr><th colspan="2">Total</th><th class="num">{{ total|pesos }}</th></tr></tfoot>
+          </table>
+        {% endcall %}
       {% endif %}
       {% if missing %}
         <p class="flash flash-error">Not on your menu: {{ missing|join(', ') }}</p>
@@ -53,6 +60,7 @@
     {% elif error %}
       <p class="flash flash-error">{{ error }}</p>
     {% else %}
+      {{ art.chef_says('happy', "Tick what you'd like and I'll ring up the bill.", 'sm') }}
       <p class="muted">Pick foods and press Calculate total. Each one is found by tree search and the prices are added exactly, in centavos.</p>
     {% endif %}
   </section>

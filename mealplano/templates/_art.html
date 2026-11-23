@@ -1,0 +1,124 @@
+{#- MealPLANO's own game-style art: an original chef mascot, food icons, order
+    tickets, stamps and stars. Everything is drawn here as inline SVG and
+    coloured by CSS classes in static/style.css; no images or third-party art.
+    Every drawing is decorative (aria-hidden); anything the chef "says" is
+    real text next to it. Import with:  {% import "_art.html" as art %}  -#}
+
+{% macro chef(mood='happy', size='md') -%}
+<svg class="art chef chef-{{ mood }} chef-{{ size }}" viewBox="0 0 120 150" aria-hidden="true" focusable="false" data-mood="{{ mood }}">
+  <g class="chef-body">
+    {# shoulders and jacket #}
+    <path class="art-jacket" d="M22 150 C22 122 38 110 60 110 C82 110 98 122 98 150 Z"/>
+    <circle class="art-button" cx="60" cy="130" r="2.6"/><circle class="art-button" cx="60" cy="141" r="2.6"/>
+    {# neckerchief #}
+    <path class="art-scarf" d="M44 108 L76 108 L60 124 Z"/>
+    {# spatula in hand #}
+    <g class="chef-spatula">
+      <rect class="art-handle" x="94" y="96" width="5" height="30" rx="2.5" transform="rotate(18 96 111)"/>
+      <rect class="art-metal" x="94" y="76" width="16" height="20" rx="3" transform="rotate(18 102 86)"/>
+    </g>
+    {# face #}
+    <circle class="art-skin" cx="60" cy="80" r="30"/>
+    <circle class="art-cheek" cx="42" cy="88" r="5"/><circle class="art-cheek" cx="78" cy="88" r="5"/>
+    {# toque: a puffy top on a band #}
+    <g class="chef-hat">
+      <circle class="art-hat" cx="40" cy="34" r="16"/>
+      <circle class="art-hat" cx="60" cy="24" r="19"/>
+      <circle class="art-hat" cx="80" cy="34" r="16"/>
+      <rect class="art-hat" x="34" y="34" width="52" height="20" rx="4"/>
+      <rect class="art-hat-band" x="32" y="48" width="56" height="10" rx="3"/>
+    </g>
+    {# expression #}
+    <g class="chef-face">
+      {% if mood == 'proud' %}
+        <path class="art-star-eye" d="M47 72 l2.2 4.6 5 .7 -3.6 3.5 .9 5 -4.5-2.4 -4.5 2.4 .9-5 -3.6-3.5 5-.7z"/>
+        <path class="art-star-eye" d="M73 72 l2.2 4.6 5 .7 -3.6 3.5 .9 5 -4.5-2.4 -4.5 2.4 .9-5 -3.6-3.5 5-.7z"/>
+        <path class="art-mouth-open" d="M46 92 Q60 108 74 92 Z"/>
+      {% elif mood == 'worried' %}
+        <path class="art-line" d="M40 68 L52 72"/><path class="art-line" d="M80 68 L68 72"/>
+        <g class="chef-eyes"><circle class="art-eye" cx="47" cy="79" r="3.4"/><circle class="art-eye" cx="73" cy="79" r="3.4"/></g>
+        <path class="art-line" d="M48 98 Q54 93 60 98 T72 98"/>
+        <path class="art-sweat" d="M88 62 C91 68 93 71 93 74 A5 5 0 0 1 83 74 C83 71 85 68 88 62 Z"/>
+      {% elif mood == 'dizzy' %}
+        <path class="art-line" d="M47 79 m-5 0 a5 5 0 1 1 5 5 a3 3 0 1 1 -3-3"/>
+        <path class="art-line" d="M73 79 m-5 0 a5 5 0 1 1 5 5 a3 3 0 1 1 -3-3"/>
+        <ellipse class="art-mouth-open" cx="60" cy="97" rx="5" ry="6"/>
+      {% else %}
+        <g class="chef-eyes"><ellipse class="art-eye" cx="47" cy="79" rx="3.4" ry="4.4"/><ellipse class="art-eye" cx="73" cy="79" rx="3.4" ry="4.4"/></g>
+        <path class="art-line" d="M47 93 Q60 104 73 93"/>
+      {% endif %}
+    </g>
+  </g>
+</svg>
+{%- endmacro %}
+
+{% macro chef_says(mood, text, size='md') -%}
+<div class="chef-says chef-says-{{ size }}">
+  {{ chef(mood, size) }}
+  <p class="bubble">{{ text }}</p>
+</div>
+{%- endmacro %}
+
+{% macro food_icon(category) -%}
+<svg class="art food-icon icon-{{ category|lower }}" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  {% if category == 'Breakfast' %}
+    {# fried egg in a pan #}
+    <rect class="art-pan-handle" x="22" y="14" width="10" height="4" rx="2"/>
+    <circle class="art-pan" cx="14" cy="16" r="12"/>
+    <path class="art-egg" d="M7 15 C6 9 12 7 15 9 C19 6 23 10 21 14 C24 18 19 23 14 22 C9 23 6 19 7 15 Z"/>
+    <circle class="art-yolk" cx="14.5" cy="15" r="3.8"/>
+  {% elif category == 'Lunch' %}
+    {# rice bowl with chopsticks #}
+    <path class="art-chopstick" d="M17 3 L27 15"/><path class="art-chopstick" d="M21 2 L29 13"/>
+    <path class="art-rice" d="M5 16 C6 9 12 8 16 10 C20 8 26 9 27 16 Z"/>
+    <path class="art-bowl" d="M3 16 H29 C29 24 23 29 16 29 C9 29 3 24 3 16 Z"/>
+    <path class="art-bowl-band" d="M5.5 21 H26.5"/>
+  {% elif category == 'Dinner' %}
+    {# covered plate (cloche) #}
+    <circle class="art-knob" cx="16" cy="8" r="2.4"/>
+    <path class="art-cloche" d="M4 23 C4 15 9 10 16 10 C23 10 28 15 28 23 Z"/>
+    <path class="art-shine" d="M9 19 C9 16 11 14 13 13"/>
+    <rect class="art-plate" x="2" y="23" width="28" height="4" rx="2"/>
+  {% else %}
+    {# banana cue on a stick #}
+    <path class="art-stick" d="M5 29 L27 4"/>
+    <ellipse class="art-banana" cx="11" cy="22" rx="5" ry="3.4" transform="rotate(-48 11 22)"/>
+    <ellipse class="art-banana" cx="16.5" cy="15.8" rx="5" ry="3.4" transform="rotate(-48 16.5 15.8)"/>
+    <ellipse class="art-banana" cx="22" cy="9.6" rx="5" ry="3.4" transform="rotate(-48 22 9.6)"/>
+  {% endif %}
+</svg>
+{%- endmacro %}
+
+{% macro hat_icon() -%}
+<svg class="art hat-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+  <circle class="art-hat" cx="10" cy="12" r="7"/><circle class="art-hat" cx="16" cy="8" r="8"/><circle class="art-hat" cx="22" cy="12" r="7"/>
+  <rect class="art-hat" x="7" y="12" width="18" height="10" rx="2"/>
+  <rect class="art-hat-band" x="6" y="21" width="20" height="6" rx="2"/>
+</svg>
+{%- endmacro %}
+
+{% macro stamp(kind, text) -%}
+<span class="stamp stamp-{{ kind }}">{{ text }}</span>
+{%- endmacro %}
+
+{% macro stars(n, out_of=3) -%}
+<span class="stars" role="img" aria-label="{{ n }} of {{ out_of }} stars">
+  {%- for i in range(1, out_of + 1) -%}
+    <svg class="art star star-{{ i }} {{ 'star-on' if i <= n else 'star-off' }}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 2 l2.9 6.3 6.9.8 -5.1 4.7 1.4 6.8 -6.1-3.5 -6.1 3.5 1.4-6.8 -5.1-4.7 6.9-.8z"/>
+    </svg>
+  {%- endfor -%}
+</span>
+{%- endmacro %}
+
+{#- An order ticket hanging from the rail. Use with {% call art.ticket('Order') %}…{% endcall %}. -#}
+{% macro ticket(title, number='', extra_class='') -%}
+<div class="ticket {{ extra_class }}">
+  <span class="ticket-pin" aria-hidden="true"></span>
+  <div class="ticket-head">
+    <span class="ticket-title">{{ title }}</span>
+    {% if number %}<span class="ticket-number">#{{ number }}</span>{% endif %}
+  </div>
+  <div class="ticket-body">{{ caller() }}</div>
+</div>
+{%- endmacro %}

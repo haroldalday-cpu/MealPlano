@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}{{ category }} · MealPLANO{% endblock %}
 {% block content %}
 <nav class="tabs category-tabs" aria-label="Categories">
   {% for c, n in counts.items() %}
     <a href="{{ url_for('menu', category=c) }}" {% if c == category %}aria-current="page"{% endif %}>
-      {{ c }} <span class="count">{{ n }}</span>
+      {{ art.food_icon(c) }}{{ c }} <span class="count">{{ n }}</span>
     </a>
   {% endfor %}
 </nav>
@@ -12,7 +13,7 @@
 <div class="grid">
   <section class="card">
     <div class="card-head">
-      <h1>{{ category }}</h1>
+      <h1 class="with-icon">{{ art.food_icon(category) }}{{ category }}</h1>
       <form method="post" action="{{ url_for('undo') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="category" value="{{ category }}">
@@ -30,9 +31,14 @@
         <thead><tr><th>Food</th><th class="num">Price</th><th>Change price</th><th></th></tr></thead>
         <tbody>
           {% for name, price in foods %}
-            <tr>
+            {% set added = just_added and just_added[1] == name %}
+            {% set updated = just_updated and just_updated[1] == name %}
+            <tr class="{{ 'just-added' if added else '' }}{{ 'just-updated' if updated else '' }}">
               <td>{{ name }}</td>
-              <td class="num">{{ price|pesos }}</td>
+              <td class="num price-cell">{{ price|pesos }}
+                {%- if added %}<span class="score-pop" aria-hidden="true">+{{ price|pesos }}</span>{% endif %}
+                {%- if updated %}<span class="score-pop" aria-hidden="true">{{ just_updated[2]|pesos }} → {{ just_updated[3]|pesos }}</span>{% endif %}
+              </td>
               <td>
                 <form method="post" action="{{ url_for('update_price') }}" class="inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -57,7 +63,10 @@
       </table>
       </div>
     {% else %}
-      <p class="empty">No foods in {{ category }} yet. Add one with the form.</p>
+      <div class="empty empty-chef">
+        {{ art.chef_says('happy', "The " ~ category|lower ~ " station is empty. Add a dish and I'll start cooking!", 'sm') }}
+        <p>No foods in {{ category }} yet. Add one with the form.</p>
+      </div>
     {% endif %}
   </section>
 

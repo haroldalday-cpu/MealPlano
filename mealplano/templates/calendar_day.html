@@ -1,18 +1,22 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}{{ view.date.strftime('%d %b %Y') }} · MealPLANO{% endblock %}
 {% block content %}
 {% set day_iso = view.date.isoformat() %}
 <p><a href="{{ url_for('calendar_month', month=view.date.strftime('%Y-%m')) }}">‹ Back to {{ view.date.strftime('%B %Y') }}</a></p>
 <div class="grid">
-  <section class="card">
+  <section class="card rail-card">
     <h1>{{ view.date.strftime('%A, %d %B %Y') }}</h1>
-    <table>
+    <div class="order-rail" aria-hidden="true"></div>
+    {% call art.ticket("Day's order", view.date.strftime('%d%m'), 'ticket-drop') %}
+    {% if view.over %}{{ art.stamp('bad', 'OVER') }}{% elif view.meals|length == 4 %}{{ art.stamp('ok', 'FULL!') }}{% endif %}
+    <table class="ticket-table">
       <thead><tr><th>Category</th><th>Planned</th><th class="num">Price</th><th></th></tr></thead>
       <tbody>
         {% for c in categories %}
           {% set meal = view.meals.get(c) %}
           <tr>
-            <td>{{ c }}</td>
+            <td class="with-icon">{{ art.food_icon(c) }}{{ c }}</td>
             {% if meal %}
               <td>{{ meal[0] }}</td>
               <td class="num">{{ meal[1]|pesos }}</td>
@@ -32,6 +36,14 @@
       </tbody>
       <tfoot><tr><th colspan="2">Day total</th><th class="num">{{ view.total|pesos }}</th><th></th></tr></tfoot>
     </table>
+    {% endcall %}
+    {% if view.over %}
+      {{ art.chef_says('worried', 'This day costs more than your daily budget!', 'sm') }}
+    {% elif view.meals %}
+      {{ art.chef_says('happy', 'Looking tasty. On budget, too!' if view.daily else 'Looking tasty!', 'sm') }}
+    {% else %}
+      {{ art.chef_says('happy', 'An empty day. What shall we cook?', 'sm') }}
+    {% endif %}
     {% if view.daily %}
       {% if view.over %}
         <p class="verdict short">{{ (view.total - view.daily)|pesos }} over your daily budget of {{ view.daily|pesos }}.</p>
@@ -51,7 +63,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="date" value="{{ day_iso }}">
         <input type="hidden" name="category" value="{{ c }}">
-        <label>{{ c }}
+        <label><span class="with-icon">{{ art.food_icon(c) }}{{ c }}</span>
           {% if view.menus[c] %}
             <select name="name">
               {% for name, price in view.menus[c] %}

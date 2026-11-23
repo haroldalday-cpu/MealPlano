@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}Meal calendar · MealPLANO{% endblock %}
 {% block content %}
 {% set g_ = view.goals %}
@@ -38,6 +39,7 @@
              aria-label="{{ cell.date.strftime('%A %d %B') }}{% if cell.count %}: {{ cell.count }} meal{{ '' if cell.count == 1 else 's' }}, {{ cell.total|pesos }}{% if cell.over %}, over the daily budget{% endif %}{% endif %}">
             <span class="cal-date"><span class="cal-dow">{{ cell.date.strftime('%a') }} </span>{{ cell.date.day }}</span>
             {% if cell.count %}
+              <span class="cal-icon" aria-hidden="true">{% if cell.over %}<svg class="art flame" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 1 C9 4 13 6 13 10 A5 5 0 0 1 3 10 C3 7 5 6 6 4 C6.5 6 7.5 6.5 8 6.5 C8 4.5 7.5 3 8 1 Z"/></svg>{% else %}<svg class="art plate" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="7"/><circle class="plate-inner" cx="8" cy="8" r="4.2"/></svg>{% endif %}</span>
               <span class="cal-total">{{ cell.total|pesos }}</span>
               <span class="cal-meals">{{ cell.count }}/4 meals</span>
             {% endif %}

@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% import "_art.html" as art %}
 {% block title %}Create account · MealPLANO{% endblock %}
 {% block content %}
 <section class="card narrow">
+  {{ art.chef_says('happy', "New cook? Let's get you an apron.") }}
   <h1>Create an account</h1>
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

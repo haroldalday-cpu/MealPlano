@@ -179,3 +179,185 @@ a.button-link.secondary:hover { background: var(--accent-soft); }
   .cal-week { min-height: 0; flex-direction: row; gap: 12px; }
   .cal-week-label { display: inline; }
 }
+
+/* =====================================================================
+   Cooking-game theme. All art is MealPLANO's own inline SVG (templates/_art.html);
+   these rules colour it and animate it. Motion only runs for people who have not
+   asked their system to reduce motion (see the media query at the end).
+   ===================================================================== */
+:root {
+  --paper: #fffcf3;          /* order tickets */
+  --paper-line: #eadfca;
+  --crust: #8a5a36;          /* wood counter */
+  --ink: #3b2a20;            /* chef's eyes and lines */
+  --stamp-ok: #15803d;
+  --stamp-bad: #b91c1c;
+  --gold: #f59e0b;
+}
+
+/* faint kitchen tiles behind the cards */
+body { background-color: var(--bg);
+       background-image: linear-gradient(#fff4ea 1px, transparent 1px),
+                         linear-gradient(90deg, #fff4ea 1px, transparent 1px);
+       background-size: 44px 44px; }
+
+/* ---- awning top bar ---- */
+.topbar.awning { position: relative; border-bottom: 0; margin-bottom: 18px; padding: 14px 16px 16px;
+  background: repeating-linear-gradient(90deg, var(--accent-bright) 0 30px, #ffffff 30px 60px); }
+.topbar.awning::after { content: ""; position: absolute; left: 0; right: 0; bottom: -13px; height: 14px;
+  background:
+    radial-gradient(circle at 15px 0, var(--accent-bright) 14px, transparent 15px) 0 0 / 60px 14px repeat-x,
+    radial-gradient(circle at 45px 0, #ffffff 14px, transparent 15px) 0 0 / 60px 14px repeat-x;
+  filter: drop-shadow(0 2px 1px rgba(154, 52, 18, .18)); }
+.awning .brand, .awning .account { background: #fff; border-radius: 999px; padding: 4px 14px;
+  box-shadow: 0 2px 6px rgba(154, 52, 18, .22); }
+.awning .brand { display: inline-flex; align-items: center; gap: 6px; padding-left: 6px; }
+.hat-icon { width: 30px; height: 30px; overflow: visible;
+  filter: drop-shadow(1px 0 0 #c9a988) drop-shadow(-1px 0 0 #c9a988) drop-shadow(0 1px 0 #c9a988) drop-shadow(0 -1px 0 #c9a988); }
+
+/* ---- wooden counter along the bottom ---- */
+.counter { margin-top: 40px; height: 54px; border-top: 6px solid var(--crust);
+  background: repeating-linear-gradient(90deg, #b7794a 0 140px, #ad6f41 140px 280px); }
+.counter-items { display: flex; justify-content: center; gap: 36px; transform: translateY(-26px); }
+.counter-items .food-icon { width: 34px; height: 34px; margin: 0; }
+
+/* ---- food icons ---- */
+.food-icon { width: 1.3em; height: 1.3em; vertical-align: -0.3em; margin-right: .35em; flex: none; }
+.with-icon { display: inline-flex; align-items: center; }
+td.with-icon { display: table-cell; white-space: nowrap; }
+h1.with-icon .food-icon { width: 1.2em; height: 1.2em; }
+.art-pan { fill: #4b5563; }
+.art-pan-handle { fill: #6b4f3a; }
+.art-egg { fill: #ffffff; stroke: #e5e7eb; stroke-width: 1; }
+.art-yolk { fill: #fbbf24; }
+.art-chopstick { stroke: #8b5e3c; stroke-width: 2; stroke-linecap: round; }
+.art-rice { fill: #ffffff; stroke: #e5e7eb; stroke-width: 1; }
+.art-bowl { fill: #ea580c; }
+.art-bowl-band { stroke: #ffffff; stroke-width: 1.5; opacity: .8; }
+.art-knob, .art-cloche { fill: #cbd5e1; stroke: #94a3b8; stroke-width: 1; }
+.art-shine { stroke: #ffffff; stroke-width: 1.6; fill: none; stroke-linecap: round; }
+.art-plate { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1; }
+.art-stick { stroke: #a16207; stroke-width: 2; stroke-linecap: round; }
+.art-banana { fill: #d97706; stroke: #92400e; stroke-width: .8; }
+
+/* ---- chef mascot ---- */
+.chef { display: block; flex: none; overflow: visible; }
+.chef-md { width: 104px; height: 130px; }
+.chef-sm { width: 70px; height: 88px; }
+.chef-hat, .chef-body > .art-jacket { filter: drop-shadow(1px 0 0 #d6bfa6) drop-shadow(-1px 0 0 #d6bfa6)
+                                              drop-shadow(0 1px 0 #d6bfa6) drop-shadow(0 -1px 0 #d6bfa6); }
+.art-hat, .art-jacket { fill: #ffffff; }
+.art-hat-band { fill: #ffe2c4; }
+.art-button { fill: var(--accent-bright); }
+.art-scarf { fill: var(--accent-bright); }
+.art-handle { fill: #8b5e3c; }
+.art-metal { fill: #cfd5dd; stroke: #94a3b8; stroke-width: 1; }
+.art-skin { fill: #f6c9a0; }
+.art-cheek { fill: #f29b86; opacity: .55; }
+.art-eye { fill: var(--ink); }
+.art-line { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.art-mouth-open { fill: #7a2e1c; }
+.art-star-eye { fill: var(--gold); stroke: #b45309; stroke-width: .8; }
+.art-sweat { fill: #8ecae6; stroke: #4a9cc4; stroke-width: 1; }
+
+.chef-says { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.bubble { position: relative; flex: 1 1 auto; min-width: 0; margin: 0; padding: 10px 14px; border-radius: 14px; font-weight: 600;
+          background: #fff; border: 2px solid var(--border); color: var(--text); }
+.bubble::before { content: ""; position: absolute; left: -9px; top: 50%; width: 14px; height: 14px; margin-top: -7px;
+                  background: #fff; border-left: 2px solid var(--border); border-bottom: 2px solid var(--border);
+                  transform: rotate(45deg); }
+.empty-chef { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.empty-chef p { margin: 0; }
+.empty-chef .chef-says { margin: 0; }
+
+/* ---- order tickets ---- */
+.order-rail { height: 8px; margin: 10px 0 0; border-radius: 4px;
+              background: linear-gradient(#e2e8f0, #94a3b8); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
+.ticket { position: relative; margin: 6px 6px 26px; padding: 22px 16px 14px; background: var(--paper);
+          box-shadow: 0 8px 16px rgba(120, 60, 20, .14); transform: rotate(-.6deg); }
+.ticket::after { content: ""; position: absolute; left: 0; right: 0; bottom: -10px; height: 10px;
+  background: linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0 / 14px 10px repeat-x,
+              linear-gradient(225deg, var(--paper) 50%, transparent 50%) 0 0 / 14px 10px repeat-x; }
+.ticket-pin { position: absolute; top: -9px; left: 50%; width: 38px; height: 16px; margin-left: -19px;
+              border-radius: 4px; background: linear-gradient(#cbd5e1, #64748b); }
+.ticket-head { display: flex; justify-content: space-between; gap: 8px; padding-bottom: 6px;
+               border-bottom: 2px dashed var(--paper-line);
+               font: 700 .85rem/1.3 ui-monospace, "Cascadia Mono", Consolas, monospace;
+               text-transform: uppercase; letter-spacing: .06em; color: var(--accent-hover); }
+.ticket-number { color: var(--muted); }
+.ticket-body { position: relative; }
+.ticket-table th, .ticket-table td { border-bottom: 1px dashed var(--paper-line); }
+.ticket-score { display: flex; justify-content: flex-start; margin-top: 10px; padding-left: 4px; }
+
+/* bottom right, beside the stars, so it never covers the table */
+.stamp { position: absolute; z-index: 1; bottom: 2px; right: 4px; padding: 2px 10px; border: 3px solid currentColor;
+         border-radius: 6px; background: rgba(255, 255, 255, .55); font: 900 1.05rem/1.2 system-ui, sans-serif;
+         letter-spacing: .08em; text-transform: uppercase; transform: rotate(-12deg); opacity: .85; pointer-events: none; }
+.stamp-ok { color: var(--stamp-ok); }
+.stamp-bad { color: var(--stamp-bad); }
+
+.stars { display: inline-flex; gap: 4px; }
+.star { width: 30px; height: 30px; }
+.star-on path { fill: var(--gold); stroke: #b45309; stroke-width: 1.2; }
+.star-off path { fill: #f3e8da; stroke: #e2cfb8; stroke-width: 1.2; }
+
+/* ---- menu: the row that just changed ---- */
+tr.just-added, tr.just-updated { background: var(--accent-soft); }
+.price-cell { position: relative; }
+.score-pop { display: none; }
+
+/* ---- calendar day icons ---- */
+.cal-icon { line-height: 0; }
+.cal-icon svg { width: 14px; height: 14px; }
+.plate circle { fill: #e2e8f0; stroke: #94a3b8; stroke-width: 1; }
+.plate .plate-inner { fill: #fff; }
+.flame path { fill: var(--accent-bright); stroke: var(--accent-hover); stroke-width: .8; }
+
+@media (max-width: 640px) {
+  .counter-items { gap: 18px; }
+  .chef-md { width: 80px; height: 100px; }
+  .stamp { font-size: .9rem; }
+}
+
+/* ---- motion: only when the system does not ask to reduce it ---- */
+@media (prefers-reduced-motion: no-preference) {
+  button { transition: transform .08s ease, background-color .15s ease; }
+  button:active:not(:disabled) { transform: scale(.96, .9); }
+
+  .chef { animation: chef-bob 3.4s ease-in-out infinite; transform-origin: 50% 100%; }
+  .chef-eyes { transform-box: fill-box; transform-origin: center; animation: chef-blink 5s infinite; }
+  .art-sweat { animation: sweat-drip 1.8s ease-in infinite; }
+  .chef-dizzy .chef-face { transform-box: fill-box; transform-origin: center; animation: dizzy-wobble 1.2s ease-in-out infinite; }
+  .bubble { animation: bubble-in .45s cubic-bezier(.2, 1.5, .4, 1) both .15s; transform-origin: 0 50%; }
+
+  .tabs a:hover .food-icon, label.check:hover .food-icon { animation: icon-wiggle .5s ease-in-out; }
+
+  .ticket-drop { animation: ticket-drop .6s cubic-bezier(.2, 1.4, .4, 1) both; }
+  .ticket-drop .stamp { animation: stamp-thump .35s cubic-bezier(.3, 1.6, .5, 1) both .5s; }
+  .star-on { animation: star-pop .4s cubic-bezier(.2, 1.8, .4, 1) both; transform-origin: center; }
+  .star-on.star-1 { animation-delay: .8s; }
+  .star-on.star-2 { animation-delay: .95s; }
+  .star-on.star-3 { animation-delay: 1.1s; }
+
+  tr.just-added { animation: row-slide-in .5s ease-out both, row-glow 2.4s ease-out both; }
+  tr.just-updated { animation: row-glow 2.4s ease-out both; }
+  .score-pop { display: block; position: absolute; right: 4px; top: -2px; white-space: nowrap;
+               font-weight: 800; color: var(--accent); pointer-events: none;
+               animation: score-float 1.8s ease-out forwards .2s; opacity: 0; }
+
+  .cal-day.over .flame { animation: flame-flicker 1.1s ease-in-out infinite; transform-origin: 50% 100%; }
+}
+
+@keyframes chef-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes chef-blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes sweat-drip { 0% { transform: translateY(-2px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+@keyframes dizzy-wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes bubble-in { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes icon-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+@keyframes ticket-drop { from { transform: translateY(-28px) rotate(-4deg); opacity: 0; } to { transform: translateY(0) rotate(-.6deg); opacity: 1; } }
+@keyframes stamp-thump { from { transform: scale(2.4) rotate(-28deg); opacity: 0; } to { transform: scale(1) rotate(-12deg); opacity: .85; } }
+@keyframes star-pop { from { transform: scale(0) rotate(-40deg); } to { transform: scale(1) rotate(0); } }
+@keyframes row-slide-in { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes row-glow { from { background-color: #fdba74; } to { background-color: var(--accent-soft); } }
+@keyframes score-float { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-34px); opacity: 0; } }
+@keyframes flame-flicker { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(.9, 1.12); } }
